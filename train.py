@@ -1,7 +1,8 @@
 import sys
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+from src.Normalizer import Normalizer
+from src.NeuralNetwork import NeuralNetwork
 
 """
 Dataset used as 32 columns and 569 rows.
@@ -14,19 +15,10 @@ Data is normalized for performances and to be numerically stable, since some fea
 """
 
 
-def minMaxNormalize(val, min, max):
-    return (val - min) / (max - min)
-
-
-def normalize(df: pd.DataFrame):
-    """
-    Apply a min-max normalization to all features columns in a Pandas DataFrame.
-    """
-    normalized = df.copy()
-    features = normalized.columns.to_list()
-    for (name, data) in normalized[features].iteritems():
-        normalized[name] = normalized[name].apply(minMaxNormalize, args=(data.min(), data.max()))
-    return normalized
+def splitDataset(df: pd.DataFrame, quantity=0.7, seed=False):
+    train = df.sample(frac=0.8, random_state=seed if seed else None)
+    test = df.drop(train.index)
+    return [train.loc[:, df.columns > 1], train[1], test.loc[:, df.columns > 1], test[1]]
 
 
 if __name__ == "__main__":
@@ -46,18 +38,24 @@ if __name__ == "__main__":
     except pd.errors.ParserError as err:
         print("Invalid dataset: {}".format(err))
         exit(1)
+    # * Set result column as a value
+    df[1] = df[1].apply(lambda value: 1 if value == 'M' else 0)
     # * Normalize data
-    print(df)
-    normalized = normalize(df.loc[:, df.columns != 1])
+    try:
+        print("Normalizing data...")
+        normalizer = Normalizer()
+        normalized = normalizer.normalize(df.loc[:, df.columns > 0])
+        # print(normalized)
+    except ValueError as err:
+        print(err)
+        exit(1)
+    # * Split dataset in one training and one result set
+    xTrain, yTrain, xTest, yTest = splitDataset(normalized, seed=42)
     # * Initialize neural network
-    # *     Weights:
-    # *         https://cs231n.github.io/neural-networks-2/#weight-initialization
-    # *         Random number with variance sqrt(2 / n)
-    # *         w = np.random.randn(n) / sqrt(2 / n)
-    # * In loop
-    # *     Forward propagation
-    # *     Calculate cost
-    # *     Backward propagation
-    # * Per loop stats (epoch, cost, accuracy ?)
-    # * Save weights to weights.csv (with dataset reference ?)
-    pass
+    print("Initializing neural network...")
+    network = NeuralNetwork(seed=42)
+    print("Training neural network...")
+    network.train(xTrain, yTrain, xTest, yTest)
+    # * Per loop stats (epoch, cost, accuracy ?) + Graph
+    # *   epoch 39/70 - loss: 0.0750 - val_loss: 0.0406
+    # * Save weights to weights.csv (with network topology)
