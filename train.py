@@ -16,7 +16,7 @@ Data is normalized for performances and to be numerically stable, since some fea
 
 
 def splitDataset(df: pd.DataFrame, quantity=0.7, seed=False):
-    train = df.sample(frac=0.8, random_state=seed if seed else None)
+    train = df.sample(frac=0.75, random_state=seed if seed else None)
     test = df.drop(train.index)
     return [train.loc[:, df.columns > 1], train[1], test.loc[:, df.columns > 1], test[1]]
 

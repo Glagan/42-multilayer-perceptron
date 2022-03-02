@@ -3,11 +3,11 @@
 ## TODO
 
 * [ ] Train
-	* [ ] Read dataset
-	* [ ] Normalize
-	* [ ] Initialize neural network of given size
+	* [x] Read dataset
+	* [x] Normalize
+	* [x] Separate dataset in 2 set, one for training and one for testing 
+	* [x] Initialize neural network of given size
 	* [ ] Main loop
-		* [ ] Separate dataset in 2 set, one for training and one for testing 
 		* [ ] Gradient descent
 		* [ ] Feedforward
 		* [ ] Backpropagation
