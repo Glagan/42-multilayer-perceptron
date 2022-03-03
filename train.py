@@ -1,4 +1,8 @@
+from distutils.log import error
+import random
 import sys
+import time
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from src.Normalizer import Normalizer
@@ -15,13 +19,20 @@ Data is normalized for performances and to be numerically stable, since some fea
 """
 
 
-def splitDataset(df: pd.DataFrame, quantity=0.7, seed=False):
-    train = df.sample(frac=0.75, random_state=seed if seed else None)
-    test = df.drop(train.index)
-    return [train.loc[:, df.columns > 1], train[1], test.loc[:, df.columns > 1], test[1]]
+def splitDataset(df: pd.DataFrame, quantity=0.75, seed=False):
+    cpy = df.copy()
+    train = cpy.sample(frac=quantity, random_state=seed if seed else None)
+    test = cpy.drop(train.index)
+    return [train.loc[:, cpy.columns > 1].to_numpy(), train[1].to_numpy(), test.loc[:, cpy.columns > 1].to_numpy(), test[1].to_numpy()]
 
 
 if __name__ == "__main__":
+    # Manually set seed if needed
+    # Good seeds: [2862616662, 3380935500]
+    # seed = 42
+    seed = random.randrange(2**32 - 1)
+    print("Using seed [{}]".format(seed))
+
     # * Read dataset
     argc = len(sys.argv)
     if argc > 2:
@@ -50,12 +61,27 @@ if __name__ == "__main__":
         print(err)
         exit(1)
     # * Split dataset in one training and one result set
-    xTrain, yTrain, xTest, yTest = splitDataset(normalized, seed=42)
+    xTrain, yTrain, xTest, yTest = splitDataset(
+        normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(seed=42)
+    network = NeuralNetwork(size=[30, 64, 32, 16, 8, 1],
+                            learningRate=0.0001, epochs=50, seed=seed)
     print("Training neural network...")
-    network.train(xTrain, yTrain, xTest, yTest)
+    network.train(xTrain, yTrain,
+                  xTest, yTest)
+    # * DEBUG Compare trained model against all of the dataset
+    xPredict, yPredict = normalized.loc[:, normalized.columns > 1].to_numpy(
+    ), normalized[1].to_numpy()
+    errors = 0
+    for x, y in zip(xPredict, yPredict):
+        predictedX = np.ravel(np.round(network.predict(x)))[0]
+        # print(predictedX, y)
+        if predictedX != y:
+            errors += 1
+    errorRate = (errors / len(xPredict)) * 100
+    print("Errors: {}/{} {:.2f}% ({:.2f}% correct)".format(errors,
+          len(xPredict), errorRate, 100 - errorRate))
     # * Per loop stats (epoch, cost, accuracy ?) + Graph
     # *   epoch 39/70 - loss: 0.0750 - val_loss: 0.0406
     # * Save weights to weights.csv (with network topology)
