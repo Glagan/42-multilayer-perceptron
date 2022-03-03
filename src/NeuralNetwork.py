@@ -5,7 +5,7 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, size: List, epochs=50, learningRate=0.001, seed=False) -> None:
+    def __init__(self, size: List, epochs=50, learningRate=0.001, seed=False, verbose=True) -> None:
         '''
         TODO: Activation function (+ output layer) as a parameter
         '''
@@ -51,19 +51,15 @@ class NeuralNetwork:
         return np.maximum(0, x)
 
     def d_reLu(self, x):
-        pass
+        return 1. * (x > 0.)
 
-    def mse(self, yTrained, yTest):
-        return np.mean(np.power(yTest - yTrained, 2))
-
-    def d_mse(self, yTrained, yTest):
-        return 2 * (yTrained - yTest) / yTest.size
-
-    def softMax(self, x, y):
-        return -np.log(x, y)
+    def softMax(self, x):
+        x -= np.max(x)
+        return np.exp(x) / np.sum(np.exp(x))
 
     def d_softMax(self, x):
-        pass
+        x = x.reshape(-1, 1)
+        return np.diagflat(x) - np.dot(x, x.T)
 
     def forward(self, trainingData: np.ndarray):
         '''
@@ -72,25 +68,41 @@ class NeuralNetwork:
         '''
         inputs = []
         result = trainingData
-        for i in range(len(self.size) - 1):
+        # All layers except last
+        length = len(self.size) - 1
+        for i in range(length - 1):
             result = self.reLu(
                 np.dot(result, self.weights[i]) + self.biases[i])
             inputs.append(result)
+        # Output layer, use softMax instead of ReLu
+        result = self.softMax(np.dot(
+            result, self.weights[length - 1]) + self.biases[length - 1])
+        inputs.append(result)
         return result, inputs
 
     def backward(self, inputs, error):
         '''
         Backpropagation, in reverse order
         '''
-        for i in range(len(inputs) - 1, -1, -1):
+        # Output layer, use softMax derivative
+        length = len(inputs) - 1
+        # TODO: Add softmax derivative
+        inputError = np.dot(error, self.weights[length].T)
+        weightsError = np.dot(inputs[length - 1].T, error)
+        self.weights[length] -= self.learningRate * weightsError
+        self.biases[length] -= self.learningRate * error
+        error = inputError
+        # Remaining hidden layer, use ReLu derivative
+        for i in range(length - 1, -1, -1):
             inputError = np.dot(error, self.weights[i].T)
-            weightsError = np.dot(inputs[i - 1].T, error)
+            # ! i - 1 < 0 ???
+            weightsError = self.d_reLu(np.dot(inputs[i - 1].T, error))
             self.weights[i] -= self.learningRate * weightsError
             self.biases[i] -= self.learningRate * error
             error = inputError
         return error
 
-    def train(self, xTrain, yTrain, xTest, yTest):
+    def train(self, xTrain, yTrain):
         # print(xTrain)
         allTime = time()
         for epoch in range(self.epochs):
@@ -99,13 +111,13 @@ class NeuralNetwork:
             for trainingData, correctData in zip(xTrain, yTrain):
                 # print("training data shape", trainingData.shape)
                 result, inputs = self.forward(trainingData)
-                err += self.mse(result, correctData)
-                error = self.d_mse(result, correctData)
+                error = result - correctData
+                visualError = np.sum(result - correctData)
                 # Update weights and biasses depending on the error value
                 self.backward(inputs, error)
-            err = err / len(xTrain)
-            print('Epoch: {}, Time Spent: {:.2f}s, error: {:.2f}'.format(
-                epoch + 1, time() - startTime, err))
+            if self.verbose:
+                print('Epoch: {}, Time Spent: {:.2f}s, error: {:.2f}'.format(
+                    epoch + 1, time() - startTime, visualError))
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 

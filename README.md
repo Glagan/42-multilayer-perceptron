@@ -11,12 +11,13 @@
             -   [x] Weights
             -   [x] Bias
         -   [ ] Calculate forward pass
-            -   [ ] Calculate each layers neurons values (Gradient descent)
-                -   [ ] ReLU plus bias for the next layer
-            -   [ ] Calculate Output layer result (softmax)
-        -   [ ] Save error value on each iterations for graph
-        -   [ ] Backpropagation
-            -   [ ] Reverse order from forward pass
+            -   [x] Calculate each layers neurons values (Gradient descent)
+                -   [x] ReLU plus bias for the next layer
+            -   [x] Calculate Output layer result with softmax
+        -   [x] Save error value on each iterations for graph
+        -   [x] Backpropagation
+            -   [ ] softmax derivative for the last layer
+            *  [x] Reverse order from forward pass
     -   [ ] Save result (network + weights)
 -   [ ] Predict
     -   [ ] Open saved results

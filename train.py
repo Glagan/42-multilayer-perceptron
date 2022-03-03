@@ -28,7 +28,7 @@ def splitDataset(df: pd.DataFrame, quantity=0.75, seed=False):
 
 if __name__ == "__main__":
     # Manually set seed if needed
-    # Good seeds: [2862616662, 3380935500]
+    # Good seeds: [4172509286, 2862616662, 3380935500, 283079681]
     # seed = 42
     seed = random.randrange(2**32 - 1)
     print("Using seed [{}]".format(seed))
@@ -65,23 +65,21 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=[30, 64, 32, 16, 8, 1],
-                            learningRate=0.0001, epochs=50, seed=seed)
+    network = NeuralNetwork(size=[30, 16, 8, 1],
+                            learningRate=0.001, epochs=50, seed=seed, verbose=False)
     print("Training neural network...")
-    network.train(xTrain, yTrain,
-                  xTest, yTest)
-    # * DEBUG Compare trained model against all of the dataset
-    xPredict, yPredict = normalized.loc[:, normalized.columns > 1].to_numpy(
-    ), normalized[1].to_numpy()
+    network.train(xTrain, yTrain)
+    # * DEBUG Compare trained model against the test dataset
     errors = 0
-    for x, y in zip(xPredict, yPredict):
+    for x, y in zip(xTest, yTest):
+        # print(network.predict(x), y)
         predictedX = np.ravel(np.round(network.predict(x)))[0]
         # print(predictedX, y)
         if predictedX != y:
             errors += 1
-    errorRate = (errors / len(xPredict)) * 100
+    errorRate = (errors / len(xTest)) * 100
     print("Errors: {}/{} {:.2f}% ({:.2f}% correct)".format(errors,
-          len(xPredict), errorRate, 100 - errorRate))
+          len(xTest), errorRate, 100 - errorRate))
     # * Per loop stats (epoch, cost, accuracy ?) + Graph
     # *   epoch 39/70 - loss: 0.0750 - val_loss: 0.0406
     # * Save weights to weights.csv (with network topology)
