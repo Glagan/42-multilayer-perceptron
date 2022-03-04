@@ -1,6 +1,14 @@
 import numpy as np
 
 
+def sigmoid(x):
+    return 1. / (1. + np.exp(-x))
+
+
+def d_sigmoid(x):
+    return x * (1. - x)
+
+
 def reLu(x):
     '''
     ReLU activation function
@@ -22,8 +30,8 @@ def softMax(x):
     '''
     Numerically stable softMax
     '''
-    x -= np.max(x)
-    return np.exp(x) / np.sum(np.exp(x))
+    x = x - np.max(x, axis=1).reshape(x.shape[0], 1)
+    return np.exp(x) / np.sum(np.exp(x), axis=1).reshape(x.shape[0], 1)
 
 
 def d_softMax(x):

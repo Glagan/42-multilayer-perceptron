@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from src.Activation import d_softMax, d_tanh, softMax, tanh
+from src.Activation import d_reLu, d_softMax, reLu, softMax
 from src.Loss import d_mse, mse
 from src.Normalizer import Normalizer
 from src.NeuralNetwork import NeuralNetwork
@@ -65,10 +65,10 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=[30, 16, 8, 1],
-                            learningRate=0.001, epochs=50, seed=seed, verbose=True)
-    network.setActivation(tanh, d_tanh)
-    # network.setOutputActivation(softMax, d_softMax)
+    network = NeuralNetwork(size=[30, 32, 16, 1],
+                            learningRate=0.0001, epochs=10, seed=seed, verbose=True)
+    network.setActivation(reLu, d_reLu)
+    network.setOutputActivation(softMax, d_softMax)
     network.setLoss(mse, d_mse)
     print("Training neural network...")
     network.train(xTrain, yTrain)

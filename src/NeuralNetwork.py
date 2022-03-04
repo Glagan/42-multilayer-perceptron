@@ -65,35 +65,35 @@ class NeuralNetwork:
         trainingData [1, D] where D is the number of features
         returns the list values for each neurons in each layers
         '''
-        inputs = []
+        layers = []
+        activeLayers = []
         result = trainingData
         # All layers except last
-        length = len(self.size) - 1
+        length = len(self.weights)
         for i in range(length):
+            result = np.dot(result, self.weights[i]) + self.biases[i]
+            layers.append(result)
             if i == length - 1:
-                result = self.output_activation(np.dot(
-                    result, self.weights[length - 1]) + self.biases[length - 1])
+                result = self.output_activation(result)
             else:
-                result = self.activation(
-                    np.dot(result, self.weights[i]) + self.biases[i])
-            inputs.append(result)
-        return result, inputs
+                result = self.activation(result)
+            activeLayers.append(result)
+        return result, layers, activeLayers
 
-    def backward(self, inputs: np.ndarray, error: np.ndarray):
+    def backward(self, layers: np.ndarray, activeLayers: np.ndarray, error: np.ndarray):
         '''
         Backpropagation, in reverse order
         Error is of the size of the last layer neurons (amount of classes)
         '''
-        length = len(inputs) - 1
+        length = len(layers) - 1
         for i in range(length, -1, -1):
             inputError = np.dot(error, self.weights[i].T)
             # ! i - 1 < 0 ???
             if i == length:
-                weightsError = self.d_output_activation(
-                    np.dot(inputs[i - 1].T, error))
+                weightsError = np.dot(layers[i - 1].T, error)
             else:
                 weightsError = self.d_activation(
-                    np.dot(inputs[i - 1].T, error))
+                    np.dot(layers[i - 1].T, error))
             self.weights[i] -= self.learningRate * weightsError
             self.biases[i] -= self.learningRate * error
             error = inputError
@@ -113,17 +113,18 @@ class NeuralNetwork:
             startTime = time()
             for trainingData, correctData in zip(xTrain, yTrain):
                 # print("training data shape", trainingData.shape)
-                result, inputs = self.forward(trainingData)
+                result, layers, activeLayers = self.forward(trainingData)
                 visualError = self.loss(result, correctData)
                 error = self.d_loss(result, correctData)
                 # Update weights and biasses depending on the error value
-                self.backward(inputs, error)
+                self.backward(layers, activeLayers, error)
             if self.verbose:
                 print('Epoch: {}, Time Spent: {:.2f}s, error: {:.2f}'.format(
                     epoch + 1, time() - startTime, visualError))
+        print("Calculated weights", self.weights)
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 
     def predict(self, xPredict: np.ndarray):
-        result, _ = self.forward(xPredict)
+        result, _, __ = self.forward(xPredict)
         return result
