@@ -1,10 +1,10 @@
-from distutils.log import error
 import random
 import sys
-import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from src.Activation import d_softMax, d_tanh, softMax, tanh
+from src.Loss import d_mse, mse
 from src.Normalizer import Normalizer
 from src.NeuralNetwork import NeuralNetwork
 
@@ -66,7 +66,10 @@ if __name__ == "__main__":
     # * Initialize neural network
     print("Initializing neural network...")
     network = NeuralNetwork(size=[30, 16, 8, 1],
-                            learningRate=0.001, epochs=50, seed=seed, verbose=False)
+                            learningRate=0.001, epochs=50, seed=seed, verbose=True)
+    network.setActivation(tanh, d_tanh)
+    # network.setOutputActivation(softMax, d_softMax)
+    network.setLoss(mse, d_mse)
     print("Training neural network...")
     network.train(xTrain, yTrain)
     # * DEBUG Compare trained model against the test dataset

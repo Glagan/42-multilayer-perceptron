@@ -1,14 +1,10 @@
-from random import random
 from time import time
-from typing import List
+from typing import Callable, List
 import numpy as np
 
 
 class NeuralNetwork:
     def __init__(self, size: List, epochs=50, learningRate=0.001, seed=False, verbose=True) -> None:
-        '''
-        TODO: Activation function (+ output layer) as a parameter
-        '''
         if len(size) < 4:
             print("The neural network must have at least 2 hidden layers")
             exit(1)
@@ -17,6 +13,13 @@ class NeuralNetwork:
         self.size = size
         self.epochs = epochs
         self.learningRate = learningRate
+        self.verbose = verbose
+        self.loss = False
+        self.d_loss = False
+        self.activation = False
+        self.d_activation = False
+        self.output_activation = False
+        self.d_output_activation = False
         self.initialize()
         print("Created neural network of size", size)
 
@@ -42,24 +45,20 @@ class NeuralNetwork:
             # print("weights and bias", i, "shape",
             #       self.weights[i - 1].shape, self.biases[i - 1].shape)
 
-    def reLu(self, x):
-        '''
-        ReLU activation function
-            https://cs231n.github.io/neural-networks-1/#actfun
-            f(x) = max(0, x)
-        '''
-        return np.maximum(0, x)
+    def setLoss(self, fct: Callable[[np.ndarray, np.ndarray], np.ndarray], fctDerivative: Callable[[np.ndarray, np.ndarray], np.ndarray]):
+        self.loss = fct
+        self.d_loss = fctDerivative
 
-    def d_reLu(self, x):
-        return 1. * (x > 0.)
+    def setActivation(self, fct: Callable[[np.ndarray], np.ndarray], fctDerivative: Callable[[np.ndarray], np.ndarray]):
+        self.activation = fct
+        self.d_activation = fctDerivative
+        if self.output_activation == False:
+            self.output_activation = fct
+            self.d_output_activation = fctDerivative
 
-    def softMax(self, x):
-        x -= np.max(x)
-        return np.exp(x) / np.sum(np.exp(x))
-
-    def d_softMax(self, x):
-        x = x.reshape(-1, 1)
-        return np.diagflat(x) - np.dot(x, x.T)
+    def setOutputActivation(self, fct: Callable[[np.ndarray], np.ndarray], fctDerivative: Callable[[np.ndarray], np.ndarray]):
+        self.output_activation = fct
+        self.d_output_activation = fctDerivative
 
     def forward(self, trainingData: np.ndarray):
         '''
@@ -70,49 +69,53 @@ class NeuralNetwork:
         result = trainingData
         # All layers except last
         length = len(self.size) - 1
-        for i in range(length - 1):
-            result = self.reLu(
-                np.dot(result, self.weights[i]) + self.biases[i])
+        for i in range(length):
+            if i == length - 1:
+                result = self.output_activation(np.dot(
+                    result, self.weights[length - 1]) + self.biases[length - 1])
+            else:
+                result = self.activation(
+                    np.dot(result, self.weights[i]) + self.biases[i])
             inputs.append(result)
-        # Output layer, use softMax instead of ReLu
-        result = self.softMax(np.dot(
-            result, self.weights[length - 1]) + self.biases[length - 1])
-        inputs.append(result)
         return result, inputs
 
-    def backward(self, inputs, error):
+    def backward(self, inputs: np.ndarray, error: np.ndarray):
         '''
         Backpropagation, in reverse order
+        Error is of the size of the last layer neurons (amount of classes)
         '''
-        # Output layer, use softMax derivative
         length = len(inputs) - 1
-        # TODO: Add softmax derivative
-        inputError = np.dot(error, self.weights[length].T)
-        weightsError = np.dot(inputs[length - 1].T, error)
-        self.weights[length] -= self.learningRate * weightsError
-        self.biases[length] -= self.learningRate * error
-        error = inputError
-        # Remaining hidden layer, use ReLu derivative
-        for i in range(length - 1, -1, -1):
+        for i in range(length, -1, -1):
             inputError = np.dot(error, self.weights[i].T)
             # ! i - 1 < 0 ???
-            weightsError = self.d_reLu(np.dot(inputs[i - 1].T, error))
+            if i == length:
+                weightsError = self.d_output_activation(
+                    np.dot(inputs[i - 1].T, error))
+            else:
+                weightsError = self.d_activation(
+                    np.dot(inputs[i - 1].T, error))
             self.weights[i] -= self.learningRate * weightsError
             self.biases[i] -= self.learningRate * error
             error = inputError
         return error
 
-    def train(self, xTrain, yTrain):
+    def train(self, xTrain: np.ndarray, yTrain: np.ndarray):
+        assert self.loss != False
+        assert self.d_loss != False
+        assert self.activation != False
+        assert self.d_activation != False
+        assert self.output_activation != False
+        assert self.d_output_activation != False
+
         # print(xTrain)
         allTime = time()
         for epoch in range(self.epochs):
             startTime = time()
-            err = 0
             for trainingData, correctData in zip(xTrain, yTrain):
                 # print("training data shape", trainingData.shape)
                 result, inputs = self.forward(trainingData)
-                error = result - correctData
-                visualError = np.sum(result - correctData)
+                visualError = self.loss(result, correctData)
+                error = self.d_loss(result, correctData)
                 # Update weights and biasses depending on the error value
                 self.backward(inputs, error)
             if self.verbose:
@@ -121,6 +124,6 @@ class NeuralNetwork:
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 
-    def predict(self, xPredict):
+    def predict(self, xPredict: np.ndarray):
         result, _ = self.forward(xPredict)
         return result
