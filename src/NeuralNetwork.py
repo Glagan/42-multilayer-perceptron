@@ -6,8 +6,7 @@ import numpy as np
 
 class NeuralNetwork:
     def __init__(self, size: List, epochs=50, learningRate=0.001, seed=False, verbose=True) -> None:
-        if seed != False:
-            np.random.seed(seed)
+        self.seed = seed
         self.size = size
         self.epochs = epochs
         self.learningRate = learningRate
@@ -25,6 +24,8 @@ class NeuralNetwork:
             w = np.random.randn(n) / sqrt(2 / n)
         Bias is initialized to 0
         '''
+        if self.seed != False:
+            np.random.seed(self.seed)
         self.weights = []
         self.biases = []
         for i in range(1, len(self.size)):
@@ -35,6 +36,7 @@ class NeuralNetwork:
             # biases for a given layer
             # [K, 1] where K is the number of neurons in the layer
             self.biases.append(np.zeros((1, self.size[i])))
+        self.loss_over_epoch = []
 
     def forward(self, trainingData: np.ndarray):
         '''
