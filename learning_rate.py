@@ -1,7 +1,5 @@
 import random
-import sys
 from matplotlib import pyplot as plt
-import pandas as pd
 from src.Normalizer import minMaxNormalize
 from src.NeuralNetwork import NeuralNetwork
 from src.Dataset import openDataset, selectDataset, splitDataset

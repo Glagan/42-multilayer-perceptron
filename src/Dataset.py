@@ -2,12 +2,12 @@ import sys
 import pandas as pd
 
 
-def selectDataset():
+def selectDataset(default="datasets/data.csv"):
     argc = len(sys.argv)
     if argc > 2:
         print("There should be only one argument, the dataset path !")
         exit()
-    dataset_path = "datasets/data.csv"
+    dataset_path = default
     if argc == 2:
         dataset_path = sys.argv[1]
     return dataset_path
