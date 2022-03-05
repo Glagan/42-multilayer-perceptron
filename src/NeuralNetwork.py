@@ -1,5 +1,6 @@
 from time import time
 from typing import List
+from matplotlib import pyplot as plt
 import numpy as np
 
 
@@ -13,6 +14,7 @@ class NeuralNetwork:
         self.verbose = verbose
         self.initialize()
         print("Created neural network of size", size)
+        self.loss_over_epoch = []
 
     def initialize(self) -> None:
         '''
@@ -87,15 +89,20 @@ class NeuralNetwork:
         for epoch in range(self.epochs):
             # print("training data shape", trainingData.shape)
             result, layers = self.forward(xTrain)
-            # Get probabilities for predicted results
+            # Get probabilities (softMax) for predicted results
             exp_result = np.exp(result)
             probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
-            # compute the loss: average cross-entropy loss
+            # Compute the loss: average cross-entropy loss
             correct_logprobs = -np.log(probs[range(num_examples), yTrain])
             data_loss = np.sum(correct_logprobs) / num_examples
             loss = data_loss
+            self.loss_over_epoch.append(loss)
+            # How far the probability is from the expected result (0-1)
+            value_loss = np.sum(
+                yTrain - np.argmax(probs, axis=1)) / num_examples
             if self.verbose and epoch % 1000 == 0:
-                print('Epoch: {}, loss: {:.2f}'.format(epoch, loss))
+                print('epoch: {}/{}, loss: {:.2f}, value loss: {:.2f}'.format(epoch,
+                      self.epochs, loss, value_loss))
             # compute the gradient on scores
             d_result = probs
             d_result[range(num_examples), yTrain] -= 1
@@ -103,6 +110,12 @@ class NeuralNetwork:
             self.backward(xTrain, layers, d_result)
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
+
+    def showHistory(self):
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.plot(self.loss_over_epoch)
+        plt.show()
 
     def accuracy(self, xPredict: np.ndarray, yPredict: np.ndarray):
         result = xPredict
@@ -113,6 +126,10 @@ class NeuralNetwork:
                 0, np.dot(result, self.weights[i]) + self.biases[i])
         # Output layer
         result = np.dot(result, self.weights[length]) + self.biases[length]
-        predicted_class = np.argmax(result, axis=1)
+        # Get probabilities (softMax) for predicted results
+        exp_result = np.exp(result)
+        probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
+        # Select the highest probability for each classes in the results
+        predicted_class = np.argmax(probs, axis=1)
         print("Prediction accuracy: %.2f" %
               (np.mean(predicted_class == yPredict)))

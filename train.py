@@ -1,8 +1,6 @@
 import random
 import sys
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from src.Normalizer import minMaxNormalize
 from src.NeuralNetwork import NeuralNetwork
 
@@ -86,9 +84,10 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=[30, 256, 64, 2],
+    network = NeuralNetwork(size=[30, 128, 32, 2],
                             learningRate=0.001, epochs=10000, seed=seed, verbose=True)
     print("Training neural network...")
     network.train(xTrain, yTrain)
     network.accuracy(xTest, yTest)
+    network.showHistory()
     # * Save weights to weights.csv (with network topology)
