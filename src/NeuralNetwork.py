@@ -94,17 +94,16 @@ class NeuralNetwork:
             # Get probabilities (softMax) for predicted results
             exp_result = np.exp(result)
             probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
-            # Compute the loss: average cross-entropy loss
+            # (average) cross-entropy loss
             correct_logprobs = -np.log(probs[range(num_examples), yTrain])
             data_loss = np.sum(correct_logprobs) / num_examples
-            loss = data_loss
-            self.loss_over_epoch.append(loss)
+            self.loss_over_epoch.append(data_loss)
             # How far the probability is from the expected result (0-1)
             value_loss = np.sum(
                 yTrain - np.argmax(probs, axis=1)) / num_examples
             if self.verbose and epoch % 1000 == 0:
                 print('epoch: {}/{}, loss: {:.2f}, value loss: {:.2f}'.format(epoch,
-                      self.epochs, loss, value_loss))
+                      self.epochs, data_loss, value_loss))
             # compute the gradient on scores
             d_result = probs
             d_result[range(num_examples), yTrain] -= 1
@@ -121,6 +120,7 @@ class NeuralNetwork:
 
     def accuracy(self, xPredict: np.ndarray, yPredict: np.ndarray):
         result = xPredict
+        num_examples = xPredict.shape[0]
         # All layers except last
         length = len(self.weights) - 1
         for i in range(length):
@@ -131,7 +131,10 @@ class NeuralNetwork:
         # Get probabilities (softMax) for predicted results
         exp_result = np.exp(result)
         probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
+        # (average) cross-entropy loss
+        correct_logprobs = -np.log(probs[range(num_examples), yPredict])
+        data_loss = np.sum(correct_logprobs) / num_examples
         # Select the highest probability for each classes in the results
         predicted_class = np.argmax(probs, axis=1)
-        print("Prediction accuracy: %.2f" %
-              (np.mean(predicted_class == yPredict)))
+        print("Prediction accuracy: {:.2f}%, loss: {:.2f}".format(
+            np.mean(predicted_class == yPredict) * 100, data_loss))
