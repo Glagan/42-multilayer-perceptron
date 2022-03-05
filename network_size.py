@@ -22,22 +22,31 @@ if __name__ == "__main__":
     # * Initialize (simplified) neural network
     print("Initializing neural network...")
     network = NeuralNetwork(size=[30, 64, 32, 2],
-                            learningRate=0.001, epochs=5000, seed=seed, verbose=False)
-    # * Test multiple learning rate
+                            learningRate=0.01, epochs=1000, seed=seed, verbose=False)
+    # * Test multiple sizes
     loss_per_learning_rate = []
-    # * Each new training has the same dataset split and seed
-    learningRates = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-    for learningRate in learningRates:
-        network.learningRate = learningRate
+    # * Each new training use the same seed
+    # * but since the size change the weights are different
+    sizes = [
+        [30, 16, 8, 2],
+        [30, 64, 32, 2],
+        [30, 64, 64, 2],
+        [30, 128, 64, 2],
+        [30, 128, 128, 2],
+        [30, 256, 128, 64, 2],
+        [30, 256, 128, 128, 2],
+    ]
+    for size in sizes:
+        network.size = size
         network.initialize()
-        print("Training neural network with learning rate {}".format(learningRate))
+        print("Training neural network with size {}".format(size))
         network.train(xTrain, yTrain)
         network.accuracy(xTest, yTest)
         loss_per_learning_rate.append(network.loss_over_epoch)
-    # * Show results, one line per learning rate
+    # * Show results, one line per sizes
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     for index, loss in enumerate(loss_per_learning_rate):
-        plt.plot(loss, label=learningRates[index])
+        plt.plot(loss, label=sizes[index])
     plt.legend(loc="upper right")
     plt.show()
