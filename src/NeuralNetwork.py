@@ -91,18 +91,14 @@ class NeuralNetwork:
             exp_result = np.exp(result)
             probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
             # compute the loss: average cross-entropy loss
-            correct_logprobs = -np.log(probs)
-            # ! should be
-            # correct_logprobs = -np.log(probs[range(num_examples), y])
+            correct_logprobs = -np.log(probs[range(num_examples), yTrain])
             data_loss = np.sum(correct_logprobs) / num_examples
             loss = data_loss
             if self.verbose and epoch % 1000 == 0:
-                print('Epoch: {}, loss: {:.2f}'.format(epoch + 1, loss))
+                print('Epoch: {}, loss: {:.2f}'.format(epoch, loss))
             # compute the gradient on scores
             d_result = probs
-            d_result -= 1
-            # ! should be
-            # d_result[range(num_examples), y] -= 1
+            d_result[range(num_examples), yTrain] -= 1
             d_result /= num_examples
             self.backward(xTrain, layers, d_result)
         print("Trained {} epochs in {:.2f}s".format(
@@ -115,6 +111,7 @@ class NeuralNetwork:
         for i in range(length):
             result = np.maximum(
                 0, np.dot(result, self.weights[i]) + self.biases[i])
+        # Output layer
         result = np.dot(result, self.weights[length]) + self.biases[length]
         predicted_class = np.argmax(result, axis=1)
         print("Prediction accuracy: %.2f" %

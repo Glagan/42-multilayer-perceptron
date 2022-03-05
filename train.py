@@ -21,17 +21,36 @@ def splitDataset(df: pd.DataFrame, quantity=0.75, seed=False):
     cpy = df.copy()
     train = cpy.sample(frac=quantity, random_state=seed if seed else None)
     test = cpy.drop(train.index)
+    # Convert y to an array with 2 columns, one for each class
+    # yTrain = np.ndarray((train.shape[0], 2), dtype="uint8")
+    # index = 0
+    # for value in train.loc[:, 1]:
+    #     if value:
+    #         yTrain[index] = [0, 1]
+    #     else:
+    #         yTrain[index] = [1, 0]
+    #     index += 1
+    # yTest = np.ndarray((test.shape[0], 2), dtype="uint8")
+    # index = 0
+    # for value in test.loc[:, 1]:
+    #     if value:
+    #         yTest[index] = [0, 1]
+    #     else:
+    #         yTest[index] = [1, 0]
+    #     index += 1
     return [
         train.loc[:, cpy.columns > 1].to_numpy(),
         train[1].to_numpy(dtype="uint8"),
+        # yTrain,
         test.loc[:, cpy.columns > 1].to_numpy(),
         test[1].to_numpy(dtype="uint8"),
+        # yTest,
     ]
 
 
 if __name__ == "__main__":
     # Manually set seed if needed
-    # Good seeds: [4172509286, 2862616662, 3380935500, 283079681]
+    # Good seeds: [4172509286, 2862616662, 3380935500, 283079681, 1657489538]
     seed = random.randrange(2**32 - 1)
     # seed = 2825771122
     print("Using seed [{}]".format(seed))
@@ -67,7 +86,7 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=[30, 64, 32, 1],
+    network = NeuralNetwork(size=[30, 256, 64, 2],
                             learningRate=0.001, epochs=10000, seed=seed, verbose=True)
     print("Training neural network...")
     network.train(xTrain, yTrain)
