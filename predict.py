@@ -1,5 +1,4 @@
 import io
-import random
 import numpy as np
 from src.Normalizer import minMaxNormalize
 from src.NeuralNetwork import NeuralNetwork

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     # * Initialize (simplified) neural network
     print("Initializing neural network...")
     network = NeuralNetwork(size=[30, 64, 32, 2],
-                            learningRate=0.01, epochs=1000, seed=seed, verbose=False)
+                            learning_rate=0.01, epochs=1000, seed=seed, verbose=False)
     # * Test multiple sizes
     loss_per_learning_rate = []
     # * Each new training use the same seed

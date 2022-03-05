@@ -22,15 +22,15 @@ if __name__ == "__main__":
     # * Initialize (simplified) neural network
     print("Initializing neural network...")
     network = NeuralNetwork(size=[30, 64, 32, 2],
-                            learningRate=0.001, epochs=5000, seed=seed, verbose=False)
+                            learning_rate=0.001, epochs=5000, seed=seed, verbose=False)
     # * Test multiple learning rate
     loss_per_learning_rate = []
     # * Each new training has the same dataset split and seed
     learningRates = [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]
-    for learningRate in learningRates:
-        network.learningRate = learningRate
+    for learning_rate in learningRates:
+        network.learning_rate = learning_rate
         network.initialize()
-        print("Training neural network with learning rate {}".format(learningRate))
+        print("Training neural network with learning rate {}".format(learning_rate))
         network.train(xTrain, yTrain)
         network.accuracy(xTest, yTest)
         loss_per_learning_rate.append(network.loss_over_epoch)

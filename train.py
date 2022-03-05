@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from src.Optimizer.NesterovMomentum import NesterovMomentum
 from src.Normalizer import minMaxNormalize
 from src.NeuralNetwork import NeuralNetwork
 from src.Dataset import openDataset, selectDataset, splitDataset
@@ -22,8 +23,11 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
+    optimizer = NesterovMomentum()
     network = NeuralNetwork(size=[30, 256, 128, 32, 2],
-                            learningRate=0.001, epochs=5000, seed=seed, verbose=True)
+                            learning_rate=0.001,
+                            optimizer=optimizer,
+                            epochs=5000, seed=seed, verbose=True)
     print("Training neural network...")
     network.train(xTrain, yTrain)
     network.accuracy(xTest, yTest)
