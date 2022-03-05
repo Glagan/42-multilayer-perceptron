@@ -5,11 +5,12 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, size: List, epochs=50, learningRate=0.001, seed=False, verbose=True) -> None:
+    def __init__(self, size: List, epochs=50, learningRate=0.001, regularizationStrength=0.001, seed=False, verbose=True) -> None:
         self.seed = seed
         self.size = size
         self.epochs = epochs
         self.learningRate = learningRate
+        self.regularizationStrength = regularizationStrength
         self.verbose = verbose
         self.initialize()
         print("Created neural network of size", size)
@@ -54,7 +55,7 @@ class NeuralNetwork:
         result = np.dot(result, self.weights[length]) + self.biases[length]
         return result, layers
 
-    def backward(self, xTrain: np.ndarray, layers: np.ndarray, error: np.ndarray):
+    def backward(self, xTrain: np.ndarray, layers: np.ndarray, error: np.ndarray, regularization_loss: float):
         '''
         Backpropagation, in reverse order
         Error is of the size of the last layer neurons (amount of classes)
@@ -68,6 +69,7 @@ class NeuralNetwork:
         # Backpropagate each layers
         for i in range(length):
             d_weights = np.dot(r_layers[i].T, error)
+            d_weights += regularization_loss * d_weights
             d_biases = np.sum(error, axis=0, keepdims=True)
             d_layer = np.dot(error, r_weights[i].T)
             d_layer[r_layers[i] <= 0] = 0
@@ -94,21 +96,22 @@ class NeuralNetwork:
             # Get probabilities (softMax) for predicted results
             exp_result = np.exp(result)
             probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
-            # (average) cross-entropy loss
+            # (average) cross-entropy loss and L2 regularization
             correct_logprobs = -np.log(probs[range(num_examples), yTrain])
             data_loss = np.sum(correct_logprobs) / num_examples
-            self.loss_over_epoch.append(data_loss)
-            # How far the probability is from the expected result (0-1)
-            value_loss = np.sum(
-                yTrain - np.argmax(probs, axis=1)) / num_examples
+            reg_loss = 0
+            for weights in self.weights:
+                reg_loss += np.sum(0.5 * self.regularizationStrength *
+                                   np.sum(weights * weights))
+            self.loss_over_epoch.append(data_loss + reg_loss)
             if self.verbose and epoch % 1000 == 0:
-                print('epoch: {}/{}, loss: {:.2f}, value loss: {:.2f}'.format(epoch,
-                      self.epochs, data_loss, value_loss))
+                print('epoch: {}/{}, loss: {:.2f}, data loss: {:.2f}, regularization loss: {:.2f}'.format(epoch,
+                      self.epochs, data_loss + reg_loss, data_loss, reg_loss))
             # compute the gradient on scores
             d_result = probs
             d_result[range(num_examples), yTrain] -= 1
             d_result /= num_examples
-            self.backward(xTrain, layers, d_result)
+            self.backward(xTrain, layers, d_result, reg_loss)
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 

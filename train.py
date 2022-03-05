@@ -27,7 +27,7 @@ if __name__ == "__main__":
     print("Training neural network...")
     network.train(xTrain, yTrain)
     network.accuracy(xTest, yTest)
-    # network.showHistory()
+    network.showHistory()
     # * Save weights (with network topology)
     try:
         file = open("weights.res", "w")

@@ -11,7 +11,7 @@
             -   [x] Weights
             -   [x] Bias
         -   [ ] Add batch processing
-        -   [ ] Add regularization
+        -   [x] Add regularization
         -   [x] Calculate forward pass
             -   [x] Calculate each layers neurons values (Gradient descent)
                 -   [x] ReLU plus bias for the next layer
