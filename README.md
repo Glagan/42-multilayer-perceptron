@@ -1,30 +1,31 @@
 # Multilayer Perceptron
 
-## TODO
+## Requirements
 
--   [~] Train
-    -   [x] Read dataset
-    -   [x] Normalize
-    -   [x] Split dataset, one for training and one for testing
-    -   [~] Main loop
-        -   [x] Initialize neural network of given size
-            -   [x] Weights
-            -   [x] Bias
-        -   [ ] Add batch processing
-        -   [x] Add regularization
-        -   [x] Calculate forward pass
-            -   [x] Calculate each layers neurons values (Gradient descent)
-                -   [x] ReLU plus bias for the next layer
-            -   [x] Calculate Output layer result with softmax
-        -   [x] Save error value on each iterations for graph
-        -   [x] Backpropagation
-            -   [x] softmax derivative for the last layer
-            -   [x] Reverse order from forward pass
-    -   [x] Save result (network + weights)
--   [x] Predict
-    -   [x] Open saved results
-    -   [x] Simple prediction formula with given weights
-        -   [x] [binary cross-entropy error function](https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_error_function_and_logistic_regression)
+``Python 3`` and other requirements in ``requirements.txt``.
+
+## Usage
+
+You first need to **train** a model to predict with it.  
+If no datasets as the first argument is given, the default one will be used.
+
+```python
+python3 train.py
+```
+
+You can then predict for another dataset with the same format.  
+if no datasets as the first argument is given, it will try to use ``datasets/correction.csv``.
+
+```python
+python3 predict.py
+```
+
+You can see the effect of changing the learning rate and the neural network size with the ``learning_rate.py`` and ``network_size.py`` scripts, which will train a model with different hyperparameters and compare their accuracy and loss over each epoch.
+
+```python
+python3 learning_rate.py
+python3 network_size.py
+```
 
 ## Resources
 
