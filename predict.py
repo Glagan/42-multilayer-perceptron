@@ -20,6 +20,7 @@ if __name__ == "__main__":
             lines = file.readlines()
             if len(lines) != 3:
                 print("Invalid saved weights !")
+                exit(1)
             size = [int(value) for value in lines[0].split(',')]
             # Load weights and biases as separate files
             # Remove final separator and newline before split
@@ -44,11 +45,19 @@ if __name__ == "__main__":
                     current_layer = []
                 current_layer.append(row_biases)
             biases.append(np.asarray(current_layer))
+    except ValueError:
+        print("Invalid value in saved weights !")
+        exit(1)
     except IOError:
         print('No weights saved, use train.py first !')
+        exit(1)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=size)
-    network.weights = weights
-    network.biases = biases
-    network.accuracy(xPredict, yPredict)
+    try:
+        network = NeuralNetwork(size=size)
+        network.weights = weights
+        network.biases = biases
+        network.accuracy(xPredict, yPredict)
+    except ValueError:
+        print("Invalid value or dimensions in saved weights !")
+        exit(1)
