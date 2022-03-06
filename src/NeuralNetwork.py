@@ -5,13 +5,12 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, size: List, epochs=50, learning_rate=0.001, regularization_strength=0.001, optimizer=False, seed=False, verbose=True) -> None:
+    def __init__(self, size: List, epochs=50, learning_rate=0.001, regularization_strength=0.001,   seed=False, verbose=True) -> None:
         self.seed = seed
         self.size = size
         self.epochs = epochs
         self.learning_rate = learning_rate
         self.regularization_strength = regularization_strength
-        self.optimizer = optimizer
         self.verbose = verbose
         self.initialize()
         print("Created neural network of size", size)
@@ -56,13 +55,7 @@ class NeuralNetwork:
         result = np.dot(result, self.weights[length]) + self.biases[length]
         return result, layers
 
-    def optimize(self, d_weights: np.ndarray, epoch: int) -> np.ndarray:
-        # Use the optimizer if there is one, or the default function if there is none
-        if self.optimizer:
-            return self.optimizer.optimize(d_weights, self.learning_rate, epoch)
-        return -self.learning_rate * d_weights
-
-    def backward(self, xTrain: np.ndarray, layers: np.ndarray, error: np.ndarray, regularization_loss: float, epoch: int):
+    def backward(self, xTrain: np.ndarray, layers: np.ndarray, error: np.ndarray):
         '''
         Backpropagation, in reverse order
         Error is of the size of the last layer neurons (amount of classes)
@@ -76,19 +69,19 @@ class NeuralNetwork:
         # Backpropagate each layers
         for i in range(length):
             d_weights = np.dot(r_layers[i].T, error)
-            d_weights += regularization_loss * d_weights
+            d_weights += self.regularization_strength * r_weights[i]
             d_biases = np.sum(error, axis=0, keepdims=True)
             d_layer = np.dot(error, r_weights[i].T)
             d_layer[r_layers[i] <= 0] = 0
             error = d_layer
             # Update weights and biases
-            r_weights[i] += self.optimize(d_weights, epoch)
+            r_weights[i] += -self.learning_rate * d_weights
             r_biases[i] += -self.learning_rate * d_biases
         # Output layer
         d_weights = np.dot(xTrain.T, error)
-        d_weights += regularization_loss * d_weights
+        d_weights += self.regularization_strength * r_weights[length]
         d_biases = np.sum(error, axis=0, keepdims=True)
-        r_weights[length] += self.optimize(d_weights, epoch)
+        r_weights[length] += -self.learning_rate * d_weights
         r_biases[length] += -self.learning_rate * d_biases
         # Save updated weights
         self.weights = r_weights[::-1]
@@ -109,17 +102,17 @@ class NeuralNetwork:
             data_loss = np.sum(correct_logprobs) / num_examples
             reg_loss = 0
             for weights in self.weights:
-                reg_loss += np.sum(0.5 * self.regularization_strength *
-                                   np.sum(weights * weights))
+                reg_loss += (0.5 * self.regularization_strength *
+                             np.sum(weights * weights))
             self.loss_over_epoch.append(data_loss + reg_loss)
             if self.verbose and epoch % 1000 == 0:
-                print('epoch: {}/{}, loss: {:.2f}, data loss: {:.2f}, regularization loss: {:.2f}'.format(epoch,
+                print('epoch: {}/{}, loss: {:.4f}, data loss: {:.4f}, regularization loss: {:.4f}'.format(epoch,
                       self.epochs, data_loss + reg_loss, data_loss, reg_loss))
             # compute the gradient on scores
             d_result = probs
             d_result[range(num_examples), yTrain] -= 1
             d_result /= num_examples
-            self.backward(xTrain, layers, d_result, reg_loss, epoch)
+            self.backward(xTrain, layers, d_result)
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 
