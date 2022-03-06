@@ -151,5 +151,9 @@ class NeuralNetwork:
         data_loss = np.sum(correct_logprobs) / num_examples
         # Select the highest probability for each classes in the results
         predicted_class = np.argmax(probs, axis=1)
-        print("Prediction accuracy: {:.2f}%, loss: {:.2f}".format(
-            np.mean(predicted_class == yPredict) * 100, data_loss))
+        if self.verbose:
+            print('Prediction\n', np.where(predicted_class > 0, 'M', 'B'))
+            print('Real values\n', np.where(yPredict > 0, 'M', 'B'))
+        errors = np.sum(predicted_class != yPredict)
+        print("Prediction accuracy: {:.2f}%, loss: {:.2f} ({} errors out of {})".format(
+            np.mean(predicted_class == yPredict) * 100, data_loss, errors, num_examples))

@@ -6,9 +6,9 @@ from src.Dataset import openDataset, selectDataset, splitDataset
 
 if __name__ == "__main__":
     # Manually set seed if needed
-    # Good seeds: [4172509286, 2862616662, 3380935500, 283079681, 1657489538]
-    seed = random.randrange(2**32 - 1)
-    # seed = 2825771122
+    # Good seeds: [4172509286, 2862616662, 3380935500, 283079681, 1657489538, 168233142]
+    # seed = random.randrange(2**32 - 1)
+    seed = 1657489538
     print("Using seed [{}]".format(seed))
 
     # * Open and read dataset
@@ -22,9 +22,9 @@ if __name__ == "__main__":
         normalized, quantity=0.75, seed=seed)
     # * Initialize neural network
     print("Initializing neural network...")
-    network = NeuralNetwork(size=[30, 256, 128, 32, 2],
+    network = NeuralNetwork(size=[30, 256, 128, 64, 32, 2],
                             learning_rate=0.001,
-                            epochs=5000, seed=seed, verbose=True)
+                            epochs=10000, seed=seed, verbose=True)
     print("Training neural network...")
     network.train(xTrain, yTrain)
     network.accuracy(xTest, yTest)
