@@ -5,12 +5,14 @@ import numpy as np
 
 
 class NeuralNetwork:
-    def __init__(self, size: List, epochs=50, learning_rate=0.001, regularization_strength=0.001,   seed=False, verbose=True) -> None:
+    def __init__(self, size: List, epochs=50, learning_rate=0.001, regularization_strength=0.001, batch=False, batch_size=256, seed=False, verbose=True) -> None:
         self.seed = seed
         self.size = size
         self.epochs = epochs
         self.learning_rate = learning_rate
         self.regularization_strength = regularization_strength
+        self.batch = batch
+        self.batch_size = batch_size
         self.verbose = verbose
         self.initialize()
         print("Created neural network of size", size)
@@ -90,15 +92,24 @@ class NeuralNetwork:
 
     def train(self, xTrain: np.ndarray, yTrain: np.ndarray):
         allTime = time()
-        num_examples = xTrain.shape[0]
+        if self.batch_size > xTrain.shape[0]:
+            self.batch = False
+        num_examples = self.batch_size if self.batch else xTrain.shape[0]
         for epoch in range(self.epochs):
+            xUse = xTrain
+            yUse = yTrain
+            if self.batch:
+                indexes = list(range(self.batch_size))
+                np.random.shuffle(indexes)
+                xUse = xTrain[indexes]
+                yUse = yTrain[indexes]
             # print("training data shape", trainingData.shape)
-            result, layers = self.forward(xTrain)
+            result, layers = self.forward(xUse)
             # Get probabilities (softMax) for predicted results
             exp_result = np.exp(result)
             probs = exp_result / np.sum(exp_result, axis=1, keepdims=True)
             # (average) cross-entropy loss and L2 regularization
-            correct_logprobs = -np.log(probs[range(num_examples), yTrain])
+            correct_logprobs = -np.log(probs[range(num_examples), yUse])
             data_loss = np.sum(correct_logprobs) / num_examples
             reg_loss = 0
             for weights in self.weights:
@@ -110,9 +121,9 @@ class NeuralNetwork:
                       self.epochs, data_loss + reg_loss, data_loss, reg_loss))
             # compute the gradient on scores
             d_result = probs
-            d_result[range(num_examples), yTrain] -= 1
+            d_result[range(num_examples), yUse] -= 1
             d_result /= num_examples
-            self.backward(xTrain, layers, d_result)
+            self.backward(xUse, layers, d_result)
         print("Trained {} epochs in {:.2f}s".format(
             self.epochs, time() - allTime))
 
