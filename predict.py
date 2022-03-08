@@ -7,7 +7,7 @@ from src.Dataset import openDataset, selectDataset, splitDataset
 if __name__ == "__main__":
     # * Open and read dataset
     print("Loading dataset...")
-    dataset_path = selectDataset("datasets/correction.csv")
+    dataset_path = selectDataset("datasets/data.csv")
     df = openDataset(dataset_path)
     # * Normalize data
     normalized = minMaxNormalize(df.loc[:, df.columns > 0])

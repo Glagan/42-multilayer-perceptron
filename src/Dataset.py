@@ -4,12 +4,9 @@ import pandas as pd
 
 def selectDataset(default="datasets/data.csv"):
     argc = len(sys.argv)
-    if argc > 2:
-        print("There should be only one argument, the dataset path !")
-        exit()
     dataset_path = default
-    if argc == 2:
-        dataset_path = sys.argv[1]
+    if argc >= 2 and sys.argv[argc - 1] != "--no-split":
+        dataset_path = sys.argv[argc - 1]
     return dataset_path
 
 
@@ -31,28 +28,9 @@ def splitDataset(df: pd.DataFrame, quantity=0.75, seed=False):
     cpy = df.copy()
     train = cpy.sample(frac=quantity, random_state=seed if seed else None)
     test = cpy.drop(train.index)
-    # Convert y to an array with 2 columns, one for each class
-    # yTrain = np.ndarray((train.shape[0], 2), dtype="uint8")
-    # index = 0
-    # for value in train.loc[:, 1]:
-    #     if value:
-    #         yTrain[index] = [0, 1]
-    #     else:
-    #         yTrain[index] = [1, 0]
-    #     index += 1
-    # yTest = np.ndarray((test.shape[0], 2), dtype="uint8")
-    # index = 0
-    # for value in test.loc[:, 1]:
-    #     if value:
-    #         yTest[index] = [0, 1]
-    #     else:
-    #         yTest[index] = [1, 0]
-    #     index += 1
     return [
         train.loc[:, cpy.columns > 1].to_numpy(),
         train[1].to_numpy(dtype="uint8"),
-        # yTrain,
         test.loc[:, cpy.columns > 1].to_numpy(),
         test[1].to_numpy(dtype="uint8"),
-        # yTest,
     ]
